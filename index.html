@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Figure Viewer</title>
+  <style>
+    body { 
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    canvas { 
+      display: block;
+    }
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 100;
+      max-height: 95vh;
+      overflow-y: auto;
+      width: 380px;
+    }
+    button {
+      margin: 5px;
+      padding: 8px 12px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+    }
+    .slider-container {
+      margin: 10px 0;
+    }
+    .slider-container label {
+      display: inline-block;
+      width: 150px;
+    }
+    .color-presets {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      margin: 10px 0;
+    }
+    .color-preset {
+      height: 30px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    .color-preset:hover {
+      border: 2px solid white;
+    }
+    .color-preset.active {
+      border: 2px solid yellow;
+    }
+    h3 {
+      margin-top: 15px;
+      margin-bottom: 5px;
+      border-top: 1px solid #555;
+      padding-top: 10px;
+    }
+    .checkbox-container {
+      margin: 10px 0;
+    }
+    .color-picker-container {
+      display: flex;
+      align-items: center;
+    }
+    .color-picker-container label {
+      width: 80px;
+      margin-right: 10px;
+    }
+    .color-picker-container input[type="color"] {
+      width: 40px;
+      height: 40px;
+      border: none;
+      cursor: pointer;
+    }
+    #hexValue {
+      margin-left: 10px;
+      width: 80px;
+    }
+    .axis-rotation {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .axis-checkbox {
+      margin-right: 15px;
+    }
+    select {
+      padding: 5px;
+      margin: 5px 0;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <h2>3D Figure Viewer</h2>
+    
+    <h3>Shape Configuration</h3>
+    <div class="slider-container">
+      <label for="shapeSelect">Select Shape:</label>
+      <select id="shapeSelect">
+        <option value="star">Star</option>
+        <option value="cube">Cube</option>
+        <option value="octahedron">Octahedron</option>
+        <option value="tetrahedron">Tetrahedron</option>
+        <option value="dodecahedron">Dodecahedron</option>
+        <option value="icosahedron">Icosahedron</option>
+        <option value="torus">Torus</option>
+        <option value="sphere">Sphere</option>
+        <option value="cylinder">Cylinder</option>
+      </select>
+    </div>
+    <div class="slider-container" id="pointCountContainer">
+      <label for="pointCount">Number of Points (Star):</label>
+      <input type="range" id="pointCount" min="3" max="12" step="1" value="7">
+      <span id="pointCountValue">7</span>
+    </div>
+    <button id="updateShape">Update Shape</button>
+    
+    <h3>Rotation Controls</h3>
+    <div class="axis-rotation">
+      <div class="axis-checkbox">
+        <input type="checkbox" id="rotateX">
+        <label for="rotateX">X-Axis</label>
+      </div>
+      <div class="axis-checkbox">
+        <input type="checkbox" id="rotateY" checked>
+        <label for="rotateY">Y-Axis</label>
+      </div>
+      <div class="axis-checkbox">
+        <input type="checkbox" id="rotateZ">
+        <label for="rotateZ">Z-Axis</label>
+      </div>
+    </div>
+    
+    <div class="slider-container">
+      <label for="rotationSpeed">Rotation Speed:</label>
+      <input type="range" id="rotationSpeed" min="0" max="0.1" step="0.001" value="0.01">
+      <span id="rotationSpeedValue">0.01</span>
+    </div>
+    
+    <button id="toggleRotation">Pause Rotation</button>
+    <button id="resetCamera">Reset Camera</button>
+    
+    <h3>Color Options</h3>
+    <div class="checkbox-container">
+      <input type="checkbox" id="useGradient" checked>
+      <label for="useGradient">Use Color Gradient</label>
+    </div>
+
+    <div class="slider-container">
+      <label for="colorCycleSpeed">Color Cycle Speed:</label>
+      <input type="range" id="colorCycleSpeed" min="0" max="0.05" step="0.001" value="0.005">
+      <span id="colorCycleSpeedValue">0.005</span>
+    </div>
+
+    <div>
+      <h4>Color Presets</h4>
+      <div class="color-presets" id="colorPresets"></div>
+    </div>
+
+    <h4>Custom Color</h4>
+    <div class="color-picker-container">
+      <label for="customColorPicker">Color:</label>
+      <input type="color" id="customColorPicker" value="#3f48cc">
+      <input type="text" id="hexValue" value="#3f48cc">
+      <button id="applyCustomColor">Apply</button>
+    </div>
+
+    <div class="slider-container">
+      <label for="lineWidth">Line Width:</label>
+      <input type="range" id="lineWidth" min="1" max="10" step="1" value="2">
+      <span id="lineWidthValue">2</span>
+    </div>
+    
+    <h3>Background</h3>
+    <div class="slider-container">
+      <label for="bgColor">Background Color:</label>
+      <input type="color" id="bgColor" value="#1a1a1a">
+    </div>
+    
+    <h3>Animation Capture</h3>
+    <div class="slider-container">
+      <label for="frameDuration">Frame Duration (ms):</label>
+      <input type="number" id="frameDuration" min="10" max="1000" value="100">
+    </div>
+    <div class="slider-container">
+      <label for="frameCount">Number of Frames:</label>
+      <input type="number" id="frameCount" min="1" max="360" value="36">
+    </div>
+    <div class="checkbox-container">
+      <input type="checkbox" id="transparentBg">
+      <label for="transparentBg">Save with Transparent Background</label>
+    </div>
+    <button id="startCapture">Start Capture</button>
+    <button id="stopCapture" disabled>Stop Capture</button>
+    <button id="saveAnimation" disabled>Save Animation</button>
+    
+    <div id="captureStatus"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script>
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a1a1a);
+    
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 5;
+    
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true, 
+      preserveDrawingBuffer: true,
+      alpha: true 
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    
+    const colorPresets = [
+      { name: "Blue", colors: ["#0000ff"] },
+      { name: "Cyan to Blue", colors: ["#00ffff", "#0000ff"] },
+      { name: "Purple to Pink", colors: ["#9900ff", "#ff00ff"] },
+      { name: "Red to Yellow", colors: ["#ff0000", "#ffff00"] },
+      { name: "Green to Yellow", colors: ["#00ff00", "#ffff00"] },
+      { name: "Rainbow", colors: ["#ff0000", "#ff7f00", "#ffff00", "#00ff00", "#0000ff", "#4b0082", "#9400d3"] },
+      { name: "Ocean", colors: ["#006994", "#00bfff", "#87ceeb"] },
+      { name: "Sunset", colors: ["#ff7e5f", "#feb47b"] },
+      { name: "Fire", colors: ["#ff0000", "#ff7f00", "#ffff00"] }
+    ];
+    
+    let activePreset = 0;
+    let colorCycle = 0;
+    let colorCycleSpeed = 0.005;
+    let useGradient = true;
+    let customColor = new THREE.Color(0x3f48cc);
+    let pointCount = 7;
+    let currentShape = 'star';
+    
+    function createShape(shapeType) {
+      if (window.figure) {
+        scene.remove(window.figure);
+      }
+      
+      let geometry;
+      const material = new THREE.LineBasicMaterial({ 
+        color: customColor,
+        linewidth: 2
+      });
+      
+      switch (shapeType) {
+        case 'star':
+          geometry = createStarGeometry(pointCount);
+          break;
+        case 'cube':
+          geometry = new THREE.EdgesGeometry(new THREE.BoxGeometry(2, 2, 2));
+          break;
+        case 'octahedron':
+          geometry = new THREE.EdgesGeometry(new THREE.OctahedronGeometry(1.5));
+          break;
+        case 'tetrahedron':
+          geometry = new THREE.EdgesGeometry(new THREE.TetrahedronGeometry(1.5));
+          break;
+        case 'dodecahedron':
+          geometry = new THREE.EdgesGeometry(new THREE.DodecahedronGeometry(1.5));
+          break;
+        case 'icosahedron':
+          geometry = new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1.5));
+          break;
+        case 'torus':
+          geometry = new THREE.EdgesGeometry(new THREE.TorusGeometry(1, 0.4, 16, 32));
+          break;
+        case 'sphere':
+          geometry = new THREE.EdgesGeometry(new THREE.SphereGeometry(1.5, 16, 16));
+          break;
+        case 'cylinder':
+          geometry = new THREE.EdgesGeometry(new THREE.CylinderGeometry(1, 1, 2, 16));
+          break;
+        default:
+          geometry = createStarGeometry(pointCount);
+      }
+      
+      window.figure = new THREE.LineSegments(geometry, material);
+      return window.figure;
+    }
+    
+    function createStarGeometry(numPoints) {
+      const geometry = new THREE.BufferGeometry();
+      const vertices = [];
+      const innerRadius = 0.6;
+      const outerRadius = 1.2;
+      const height = 0.5;
+      
+      const topPoints = [];
+      const bottomPoints = [];
+      
+      for (let i = 0; i < numPoints * 2; i++) {
+        const angle = (i * Math.PI) / numPoints;
+        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+        const x = radius * Math.cos(angle);
+        const z = radius * Math.sin(angle);
+        
+        topPoints.push(new THREE.Vector3(x, height, z));
+        bottomPoints.push(new THREE.Vector3(x, -height, z));
+      }
+      
+      for (let i = 0; i < topPoints.length; i++) {
+        const p1 = topPoints[i];
+        const p2 = topPoints[(i + 1) % topPoints.length];
+        vertices.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+      }
+      
+      for (let i = 0; i < bottomPoints.length; i++) {
+        const p1 = bottomPoints[i];
+        const p2 = bottomPoints[(i + 1) % bottomPoints.length];
+        vertices.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+      }
+      
+      for (let i = 0; i < topPoints.length; i++) {
+        vertices.push(topPoints[i].x, topPoints[i].y, topPoints[i].z, bottomPoints[i].x, bottomPoints[i].y, bottomPoints[i].z);
+      }
+      
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+      return geometry;
+    }
+    
+    scene.add(createShape(currentShape));
+    
+    function updateColor() {
+      if (!useGradient) {
+        window.figure.material.color.copy(customColor);
+        return;
+      }
+      
+      const preset = colorPresets[activePreset];
+      if (preset.colors.length === 1) {
+        window.figure.material.color.set(preset.colors[0]);
+        return;
+      }
+      
+      colorCycle = (colorCycle + colorCycleSpeed) % 1;
+      const numSegments = preset.colors.length - 1;
+      const segmentLength = 1 / numSegments;
+      const segmentIndex = Math.floor(colorCycle / segmentLength);
+      const segmentPosition = (colorCycle - segmentIndex * segmentLength) / segmentLength;
+      
+      const color1 = new THREE.Color(preset.colors[segmentIndex]);
+      const color2 = new THREE.Color(preset.colors[(segmentIndex + 1) % preset.colors.length]);
+      const finalColor = new THREE.Color().copy(color1).lerp(color2, segmentPosition);
+      window.figure.material.color.copy(finalColor);
+    }
+    
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(1, 1, 1);
+    scene.add(directionalLight);
+    
+    let rotationSpeed = 0.01;
+    let isRotating = true;
+    let rotateX = false;
+    let rotateY = true;
+    let rotateZ = false;
+    
+    let isCapturing = false;
+    let capturedFrames = [];
+    let frameCount = 36;
+    let frameDuration = 100;
+    let currentFrame = 0;
+    let captureInterval = null;
+    
+    function initColorPresets() {
+      const container = document.getElementById('colorPresets');
+      container.innerHTML = '';
+      
+      colorPresets.forEach((preset, index) => {
+        const presetElement = document.createElement('div');
+        presetElement.className = 'color-preset' + (index === activePreset ? ' active' : '');
+        presetElement.title = preset.name;
+        
+        if (preset.colors.length === 1) {
+          presetElement.style.background = preset.colors[0];
+        } else {
+          presetElement.style.background = `linear-gradient(to right, ${preset.colors.join(', ')})`;
+        }
+        
+        presetElement.addEventListener('click', () => {
+          document.querySelectorAll('.color-preset').forEach(el => el.classList.remove('active'));
+          presetElement.classList.add('active');
+          activePreset = index;
+          document.getElementById('useGradient').checked = true;
+          useGradient = true;
+        });
+        
+        container.appendChild(presetElement);
+      });
+    }
+    
+    initColorPresets();
+    
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      if (isRotating && window.figure) {
+        if (rotateX) window.figure.rotation.x += rotationSpeed;
+        if (rotateY) window.figure.rotation.y += rotationSpeed;
+        if (rotateZ) window.figure.rotation.z += rotationSpeed;
+      }
+      
+      updateColor();
+      renderer.render(scene, camera);
+    }
+    
+    animate();
+    
+    document.getElementById('toggleRotation').addEventListener('click', function() {
+      isRotating = !isRotating;
+      this.textContent = isRotating ? 'Pause Rotation' : 'Resume Rotation';
+    });
+    
+    document.getElementById('resetCamera').addEventListener('click', function() {
+      camera.position.set(0, 0, 5);
+      camera.lookAt(0, 0, 0);
+      if (window.figure) window.figure.rotation.set(0, 0, 0);
+    });
+    
+    document.getElementById('rotateX').addEventListener('change', function() {
+      rotateX = this.checked;
+    });
+    
+    document.getElementById('rotateY').addEventListener('change', function() {
+      rotateY = this.checked;
+    });
+    
+    document.getElementById('rotateZ').addEventListener('change', function() {
+      rotateZ = this.checked;
+    });
+    
+    document.getElementById('shapeSelect').addEventListener('change', function() {
+      currentShape = this.value;
+      document.getElementById('pointCountContainer').style.display = currentShape === 'star' ? 'block' : 'none';
+      scene.add(createShape(currentShape));
+    });
+    
+    document.getElementById('updateShape').addEventListener('click', function() {
+      if (currentShape === 'star') {
+        pointCount = parseInt(document.getElementById('pointCount').value);
+      }
+      scene.add(createShape(currentShape));
+    });
+    
+    document.getElementById('pointCount').addEventListener('input', function() {
+      const value = parseInt(this.value);
+      document.getElementById('pointCountValue').textContent = value;
+    });
+    
+    document.getElementById('rotationSpeed').addEventListener('input', function() {
+      rotationSpeed = parseFloat(this.value);
+      document.getElementById('rotationSpeedValue').textContent = rotationSpeed.toFixed(3);
+    });
+    
+    document.getElementById('colorCycleSpeed').addEventListener('input', function() {
+      colorCycleSpeed = parseFloat(this.value);
+      document.getElementById('colorCycleSpeedValue').textContent = colorCycleSpeed.toFixed(3);
+    });
+    
+    document.getElementById('useGradient').addEventListener('change', function() {
+      useGradient = this.checked;
+    });
+    
+    document.getElementById('lineWidth').addEventListener('input', function() {
+      const lineWidth = parseInt(this.value);
+      document.getElementById('lineWidthValue').textContent = lineWidth;
+      if (window.figure) window.figure.material.linewidth = lineWidth;
+    });
+    
+    document.getElementById('bgColor').addEventListener('input', function() {
+      scene.background = new THREE.Color(this.value);
+    });
+    
+    document.getElementById('customColorPicker').addEventListener('input', function() {
+      const hexColor = this.value;
+      document.getElementById('hexValue').value = hexColor;
+      customColor = new THREE.Color(hexColor);
+      document.getElementById('useGradient').checked = false;
+      useGradient = false;
+    });
+    
+    document.getElementById('hexValue').addEventListener('change', function() {
+      let hexColor = this.value;
+      if (!hexColor.startsWith('#')) {
+        hexColor = '#' + hexColor;
+        this.value = hexColor;
+      }
+      document.getElementById('customColorPicker').value = hexColor;
+      customColor = new THREE.Color(hexColor);
+      document.getElementById('useGradient').checked = false;
+      useGradient = false;
+    });
+    
+    document.getElementById('applyCustomColor').addEventListener('click', function() {
+      const hexColor = document.getElementById('hexValue').value;
+      document.getElementById('customColorPicker').value = hexColor;
+      customColor = new THREE.Color(hexColor);
+      document.getElementById('useGradient').checked = false;
+      useGradient = false;
+    });
+    
+    document.getElementById('startCapture').addEventListener('click', function() {
+      if (isCapturing) return;
+      
+      frameCount = parseInt(document.getElementById('frameCount').value);
+      frameDuration = parseInt(document.getElementById('frameDuration').value);
+      
+      isCapturing = true;
+      capturedFrames = [];
+      currentFrame = 0;
+      
+      document.getElementById('startCapture').disabled = true;
+      document.getElementById('stopCapture').disabled = false;
+      document.getElementById('saveAnimation').disabled = true;
+      document.getElementById('toggleRotation').disabled = true;
+      
+      isRotating = true;
+      document.getElementById('toggleRotation').textContent = 'Pause Rotation';
+      
+      captureInterval = setInterval(captureFrame, frameDuration);
+      updateCaptureStatus();
+    });
+    
+    document.getElementById('stopCapture').addEventListener('click', function() {
+      if (!isCapturing) return;
+      
+      clearInterval(captureInterval);
+      isCapturing = false;
+      
+      document.getElementById('startCapture').disabled = false;
+      document.getElementById('stopCapture').disabled = true;
+      document.getElementById('saveAnimation').disabled = false;
+      document.getElementById('toggleRotation').disabled = false;
+      
+      updateCaptureStatus();
+    });
+    
+    document.getElementById('saveAnimation').addEventListener('click', function() {
+      if (capturedFrames.length === 0) {
+        alert('No frames captured yet!');
+        return;
+      }
+      saveFrames();
+    });
+    
+    function captureFrame() {
+      if (currentFrame >= frameCount) {
+        document.getElementById('stopCapture').click();
+        return;
+      }
+      
+      const useTransparent = document.getElementById('transparentBg').checked;
+      const originalBackground = scene.background.clone();
+      
+      if (useTransparent) {
+        scene.background = null;
+      }
+      
+      renderer.render(scene, camera);
+      const dataURL = renderer.domElement.toDataURL('image/png');
+      capturedFrames.push(dataURL);
+      
+      scene.background = originalBackground;
+      renderer.render(scene, camera);
+      
+      currentFrame++;
+      updateCaptureStatus();
+    }
+    
+    function updateCaptureStatus() {
+      const statusElement = document.getElementById('captureStatus');
+      if (isCapturing) {
+        statusElement.innerHTML = `Capturing: ${currentFrame}/${frameCount} frames`;
+      } else if (capturedFrames.length > 0) {
+        statusElement.innerHTML = `Captured: ${capturedFrames.length} frames`;
+      } else {
+        statusElement.innerHTML = '';
+      }
+    }
+    
+    function saveFrames() {
+      const zip = new JSZip();
+      const folder = zip.folder("figure-frames");
+      
+      capturedFrames.forEach((dataURL, index) => {
+        const data = dataURL.split(',')[1];
+        const blob = b64toBlob(data, 'image/png');
+        const paddedIndex = String(index).padStart(4, '0');
+        folder.file(`frame-${paddedIndex}.png`, blob);
+      });
+      
+      zip.generateAsync({type:"blob"}).then(function(content) {
+        saveAs(content, "figure-animation.zip");
+      });
+    }
+    
+    function b64toBlob(b64Data, contentType, sliceSize) {
+      contentType = contentType || '';
+      sliceSize = sliceSize || 512;
+      
+      const byteCharacters = atob(b64Data);
+      const byteArrays = [];
+      
+      for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+        const slice = byteCharacters.slice(offset, offset + sliceSize);
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+          byteNumbers[i] = slice.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+      }
+      
+      return new Blob(byteArrays, {type: contentType});
+    }
+    
+    window.addEventListener('resize', function() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+    
+    document.getElementById('pointCountContainer').style.display = 'block';
+  </script>
+</body>
+</html>
