@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>3D Figure Viewer</title>
+  <title>3D Figure Viewer with Ambient Dust</title>
   <style>
     body { 
       margin: 0;
@@ -90,7 +90,7 @@
       border: none;
       cursor: pointer;
     }
-    #hexValue {
+    #hexValue, #dustHexValue {
       margin-left: 10px;
       width: 80px;
     }
@@ -106,6 +106,23 @@
       padding: 5px;
       margin: 5px 0;
       width: 100%;
+    }
+    .gradient-color {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+    }
+    .gradient-color input[type="color"] {
+      width: 30px;
+      height: 30px;
+      border: none;
+      margin-right: 10px;
+    }
+    .gradient-color button {
+      background: #ff4444;
+    }
+    .gradient-color button:hover {
+      background: #cc0000;
     }
   </style>
 </head>
@@ -150,13 +167,11 @@
         <label for="rotateZ">Z-Axis</label>
       </div>
     </div>
-    
     <div class="slider-container">
       <label for="rotationSpeed">Rotation Speed:</label>
       <input type="range" id="rotationSpeed" min="0" max="0.1" step="0.001" value="0.01">
       <span id="rotationSpeedValue">0.01</span>
     </div>
-    
     <button id="toggleRotation">Pause Rotation</button>
     <button id="resetCamera">Reset Camera</button>
     
@@ -165,18 +180,20 @@
       <input type="checkbox" id="useGradient" checked>
       <label for="useGradient">Use Color Gradient</label>
     </div>
-
+    <div id="gradientEditor" style="display: block;">
+      <h4>Gradient Colors</h4>
+      <div id="gradientColorsList"></div>
+      <button id="addGradientColor">Add Color</button>
+    </div>
     <div class="slider-container">
       <label for="colorCycleSpeed">Color Cycle Speed:</label>
       <input type="range" id="colorCycleSpeed" min="0" max="0.05" step="0.001" value="0.005">
       <span id="colorCycleSpeedValue">0.005</span>
     </div>
-
     <div>
       <h4>Color Presets</h4>
       <div class="color-presets" id="colorPresets"></div>
     </div>
-
     <h4>Custom Color</h4>
     <div class="color-picker-container">
       <label for="customColorPicker">Color:</label>
@@ -184,7 +201,6 @@
       <input type="text" id="hexValue" value="#3f48cc">
       <button id="applyCustomColor">Apply</button>
     </div>
-
     <div class="slider-container">
       <label for="lineWidth">Line Width:</label>
       <input type="range" id="lineWidth" min="1" max="10" step="1" value="2">
@@ -205,6 +221,98 @@
     <div class="checkbox-container">
       <input type="checkbox" id="showAxes">
       <label for="showAxes">Show Coordinate Axes</label>
+    </div>
+
+    <h3>Ambient Dust</h3>
+    <div class="checkbox-container">
+      <input type="checkbox" id="enableDust">
+      <label for="enableDust">Enable Dust</label>
+    </div>
+    <div id="dustOptions" style="display: none;">
+      <div class="checkbox-container">
+        <input type="checkbox" id="dustGravity" checked>
+        <label for="dustGravity">Gravity</label>
+      </div>
+      <div class="slider-container">
+        <label for="dustSpeed">Falling Speed:</label>
+        <input type="range" id="dustSpeed" min="0" max="0.1" step="0.001" value="0.01">
+        <span id="dustSpeedValue">0.01</span>
+      </div>
+      <div>
+        <label>Falling Direction:</label>
+        <div class="axis-rotation">
+          <div class="axis-checkbox">
+            <label for="dustDirX">X:</label>
+            <input type="number" id="dustDirX" min="-1" max="1" step="0.1" value="0">
+          </div>
+          <div class="axis-checkbox">
+            <label for="dustDirY">Y:</label>
+            <input type="number" id="dustDirY" min="-1" max="1" step="0.1" value="-1">
+          </div>
+          <div class="axis-checkbox">
+            <label for="dustDirZ">Z:</label>
+            <input type="number" id="dustDirZ" min="-1" max="1" step="0.1" value="0">
+          </div>
+        </div>
+      </div>
+      <div class="slider-container">
+        <label for="dustScale">Scale:</label>
+        <input type="range" id="dustScale" min="0.01" max="0.2" step="0.01" value="0.05">
+        <span id="dustScaleValue">0.05</span>
+      </div>
+      <div class="slider-container">
+        <label for="dustShape">Shape:</label>
+        <select id="dustShape">
+          <option value="circle">Circle</option>
+          <option value="square">Square</option>
+        </select>
+      </div>
+      <div class="slider-container">
+        <label for="dustFlickerSpeed">Flicker Speed:</label>
+        <input type="range" id="dustFlickerSpeed" min="0.01" max="0.2" step="0.01" value="0.05">
+        <span id="dustFlickerSpeedValue">0.05</span>
+      </div>
+      <div class="slider-container">
+        <label for="dustParticleCount">Particle Count:</label>
+        <input type="range" id="dustParticleCount" min="100" max="5000" step="100" value="1000">
+        <span id="dustParticleCountValue">1000</span>
+      </div>
+      <div class="slider-container">
+        <label for="dustDepth">Depth (Camera Distance):</label>
+        <input type="range" id="dustDepth" min="5" max="50" step="1" value="20">
+        <span id="dustDepthValue">20</span>
+      </div>
+      <div class="slider-container">
+        <label for="dustSpread">Spread (Horizontal):</label>
+        <input type="range" id="dustSpread" min="5" max="50" step="1" value="20">
+        <span id="dustSpreadValue">20</span>
+      </div>
+      <h4>Dust Color</h4>
+      <div class="checkbox-container">
+        <input type="checkbox" id="dustUseGradient" checked>
+        <label for="dustUseGradient">Use Color Gradient</label>
+      </div>
+      <div id="dustGradientEditor" style="display: block;">
+        <h4>Dust Gradient Colors</h4>
+        <div id="dustGradientColorsList"></div>
+        <button id="addDustGradientColor">Add Color</button>
+      </div>
+      <div class="slider-container">
+        <label for="dustColorCycleSpeed">Color Cycle Speed:</label>
+        <input type="range" id="dustColorCycleSpeed" min="0" max="0.05" step="0.001" value="0.005">
+        <span id="dustColorCycleSpeedValue">0.005</span>
+      </div>
+      <div>
+        <h5>Color Presets</h5>
+        <div class="color-presets" id="dustColorPresets"></div>
+      </div>
+      <h5>Custom Color</h5>
+      <div class="color-picker-container">
+        <label for="dustCustomColorPicker">Color:</label>
+        <input type="color" id="dustCustomColorPicker" value="#ffffff">
+        <input type="text" id="dustHexValue" value="#ffffff">
+        <button id="applyDustCustomColor">Apply</button>
+      </div>
     </div>
 
     <h3>Manual Rotation</h3>
@@ -285,6 +393,7 @@
     let customColor = new THREE.Color(0x3f48cc);
     let pointCount = 7;
     let currentShape = 'star';
+    let gradientColors = [...colorPresets[activePreset].colors];
     
     let wireframeMaterial = new THREE.LineBasicMaterial({ 
       color: customColor,
@@ -294,6 +403,214 @@
       color: customColor,
       side: THREE.DoubleSide
     });
+
+    class AmbientDust {
+      constructor() {
+        this.particleCount = 1000;
+        this.particles = new THREE.BufferGeometry();
+        this.positions = new Float32Array(this.particleCount * 3);
+        this.velocities = new Float32Array(this.particleCount * 3);
+        this.opacities = new Float32Array(this.particleCount);
+        this.phases = new Float32Array(this.particleCount);
+
+        this.particles.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
+        this.particles.setAttribute('opacity', new THREE.BufferAttribute(this.opacities, 1));
+
+        function createCircleTexture() {
+          const size = 32;
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const context = canvas.getContext('2d');
+          context.beginPath();
+          context.arc(size / 2, size / 2, size / 2 - 2, 0, 2 * Math.PI);
+          context.fillStyle = 'white';
+          context.fill();
+          return new THREE.CanvasTexture(canvas);
+        }
+
+        function createSquareTexture() {
+          const size = 32;
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const context = canvas.getContext('2d');
+          context.fillStyle = 'white';
+          context.fillRect(2, 2, size - 4, size - 4);
+          return new THREE.CanvasTexture(canvas);
+        }
+
+        this.circleTexture = createCircleTexture();
+        this.squareTexture = createSquareTexture();
+
+        this.material = new THREE.ShaderMaterial({
+          uniforms: {
+            pointTexture: { value: this.circleTexture },
+            pointSize: { value: 0.05 },
+            pointColor: { value: new THREE.Color(0xffffff) },
+          },
+          vertexShader: `
+            attribute float opacity;
+            varying float vOpacity;
+            uniform float pointSize;
+            void main() {
+              vOpacity = opacity;
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+              gl_PointSize = pointSize * (300.0 / -modelViewMatrix[3].z);
+            }
+          `,
+          fragmentShader: `
+            uniform sampler2D pointTexture;
+            uniform vec3 pointColor;
+            varying float vOpacity;
+            void main() {
+              gl_FragColor = vec4(pointColor, vOpacity) * texture2D(pointTexture, gl_PointCoord);
+            }
+          `,
+          transparent: true,
+          blending: THREE.NormalBlending,
+          depthWrite: false,
+        });
+
+        this.points = new THREE.Points(this.particles, this.material);
+
+        this.gravityEnabled = true;
+        this.fallingSpeed = 0.01;
+        this.fallingDirection = new THREE.Vector3(0, -1, 0);
+        this.scale = 0.05;
+        this.shape = 'circle';
+        this.bounds = 10;
+        this.flickerSpeed = 0.05;
+        this.spread = 20;
+        this.depth = 20;
+
+        this.initializeParticles();
+      }
+
+      initializeParticles() {
+        for (let i = 0; i < this.particleCount; i++) {
+          this.positions[i * 3] = (Math.random() - 0.5) * this.spread;
+          this.positions[i * 3 + 1] = (Math.random() - 0.5) * this.bounds * 2;
+          this.positions[i * 3 + 2] = (Math.random() - 0.5) * this.depth;
+          this.velocities[i * 3] = (Math.random() - 0.5) * 0.005;
+          this.velocities[i * 3 + 1] = -this.fallingSpeed;
+          this.velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.005;
+          this.opacities[i] = Math.random();
+          this.phases[i] = Math.random() * Math.PI * 2;
+        }
+        this.particles.attributes.position.needsUpdate = true;
+        this.particles.attributes.opacity.needsUpdate = true;
+      }
+
+      setParticleCount(count) {
+        this.particleCount = count;
+        this.positions = new Float32Array(this.particleCount * 3);
+        this.velocities = new Float32Array(this.particleCount * 3);
+        this.opacities = new Float32Array(this.particleCount);
+        this.phases = new Float32Array(this.particleCount);
+
+        this.particles.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
+        this.particles.setAttribute('opacity', new THREE.BufferAttribute(this.opacities, 1));
+        this.initializeParticles();
+      }
+
+      setFlickerSpeed(speed) {
+        this.flickerSpeed = speed;
+      }
+
+      setDepth(depth) {
+        this.depth = depth;
+        this.initializeParticles();
+      }
+
+      setSpread(spread) {
+        this.spread = spread;
+        this.initializeParticles();
+      }
+
+      update() {
+        if (this.gravityEnabled) {
+          for (let i = 0; i < this.particleCount; i++) {
+            this.positions[i * 3] += this.velocities[i * 3];
+            this.positions[i * 3 + 1] += this.velocities[i * 3 + 1];
+            this.positions[i * 3 + 2] += this.velocities[i * 3 + 2];
+
+            if (this.positions[i * 3 + 1] < -this.bounds) {
+              this.positions[i * 3 + 1] = this.bounds;
+              this.positions[i * 3] = (Math.random() - 0.5) * this.spread;
+              this.positions[i * 3 + 2] = (Math.random() - 0.5) * this.depth;
+            } else if (this.positions[i * 3 + 1] > this.bounds) {
+              this.positions[i * 3 + 1] = -this.bounds;
+              this.positions[i * 3] = (Math.random() - 0.5) * this.spread;
+              this.positions[i * 3 + 2] = (Math.random() - 0.5) * this.depth;
+            }
+
+            if (this.positions[i * 3] < -this.spread / 2) {
+              this.positions[i * 3] += this.spread;
+            } else if (this.positions[i * 3] > this.spread / 2) {
+              this.positions[i * 3] -= this.spread;
+            }
+
+            if (this.positions[i * 3 + 2] < -this.depth / 2) {
+              this.positions[i * 3 + 2] += this.depth;
+            } else if (this.positions[i * 3 + 2] > this.depth / 2) {
+              this.positions[i * 3 + 2] -= this.depth;
+            }
+
+            this.phases[i] += this.flickerSpeed;
+            this.opacities[i] = (Math.sin(this.phases[i]) + 1) / 2;
+          }
+
+          this.particles.attributes.position.needsUpdate = true;
+          this.particles.attributes.opacity.needsUpdate = true;
+        }
+      }
+
+      setGravity(enabled) {
+        this.gravityEnabled = enabled;
+      }
+
+      setFallingSpeed(speed) {
+        this.fallingSpeed = speed;
+        this.updateVelocities();
+      }
+
+      setFallingDirection(x, y, z) {
+        this.fallingDirection.set(x, y, z).normalize();
+        this.updateVelocities();
+      }
+
+      updateVelocities() {
+        for (let i = 0; i < this.particleCount; i++) {
+          this.velocities[i * 3] = this.fallingDirection.x * this.fallingSpeed + (Math.random() - 0.5) * 0.005;
+          this.velocities[i * 3 + 1] = this.fallingDirection.y * this.fallingSpeed;
+          this.velocities[i * 3 + 2] = this.fallingDirection.z * this.fallingSpeed + (Math.random() - 0.5) * 0.005;
+        }
+      }
+
+      setScale(scale) {
+        this.scale = scale;
+        this.material.uniforms.pointSize.value = scale;
+      }
+
+      setShape(shape) {
+        this.shape = shape;
+        this.material.uniforms.pointTexture.value = shape === 'circle' ? this.circleTexture : this.squareTexture;
+      }
+
+      setColor(color) {
+        this.material.uniforms.pointColor.value.set(color);
+      }
+    }
+
+    let dust = new AmbientDust();
+
+    let dustActivePreset = 0;
+    let dustColorCycle = 0;
+    let dustColorCycleSpeed = 0.005;
+    let dustUseGradient = true;
+    let dustCustomColor = new THREE.Color(0xffffff);
+    let dustGradientColors = [...colorPresets[dustActivePreset].colors];
 
     function createShape(shapeType, isWireframe = true) {
       if (window.figure) {
@@ -356,7 +673,7 @@
         new THREE.Mesh(geometry, material);
       return window.figure;
     }
-    
+
     function createStarGeometryWireframe(numPoints) {
       const geometry = new THREE.BufferGeometry();
       const vertices = [];
@@ -409,7 +726,6 @@
       const outerRadius = 1.2;
       const height = 0.5;
 
-      // Вершины для верхней и нижней звезды
       const topPoints = [];
       const bottomPoints = [];
       for (let i = 0; i < numPoints; i++) {
@@ -426,30 +742,25 @@
         bottomPoints.push(new THREE.Vector3(xInner, -height, zInner));
       }
 
-      // Центр верхней и нижней звезды
       const topCenter = new THREE.Vector3(0, height, 0);
       const bottomCenter = new THREE.Vector3(0, -height, 0);
 
-      // Добавляем вершины
       vertices.push(topCenter.x, topCenter.y, topCenter.z);
-      vertices.push(bottomCenter.x, bottomCenter.y, bottomCenter.z);
+      vertices.push(bottomColor.x, bottomCenter.y, bottomCenter.z);
       topPoints.forEach(p => vertices.push(p.x, p.y, p.z));
       bottomPoints.forEach(p => vertices.push(p.x, p.y, p.z));
 
-      // Индексы для треугольников верхней звезды
       for (let i = 0; i < topPoints.length; i++) {
         const nextI = (i + 1) % topPoints.length;
         indices.push(0, i + 2, nextI + 2);
       }
 
-      // Индексы для треугольников нижней звезды
       const bottomStart = topPoints.length + 2;
       for (let i = 0; i < bottomPoints.length; i++) {
         const nextI = (i + 1) % bottomPoints.length;
         indices.push(1, bottomStart + i, bottomStart + nextI);
       }
 
-      // Индексы для боковых граней
       for (let i = 0; i < topPoints.length; i++) {
         const nextI = (i + 1) % topPoints.length;
         indices.push(i + 2, bottomStart + i, nextI + 2);
@@ -465,31 +776,48 @@
     scene.add(createShape(currentShape));
     
     function updateColor() {
-      const targetMaterial = window.figure instanceof THREE.LineSegments ? 
-        wireframeMaterial : 
-        solidMaterial;
-      
+      const targetMaterial = window.figure instanceof THREE.LineSegments ? wireframeMaterial : solidMaterial;
       if (!useGradient) {
         targetMaterial.color.copy(customColor);
         return;
       }
-      
-      const preset = colorPresets[activePreset];
-      if (preset.colors.length === 1) {
-        targetMaterial.color.set(preset.colors[0]);
+      if (gradientColors.length === 1) {
+        targetMaterial.color.set(gradientColors[0]);
         return;
       }
-      
       colorCycle = (colorCycle + colorCycleSpeed) % 1;
-      const numSegments = preset.colors.length - 1;
-      const segmentLength = 1 / numSegments;
-      const segmentIndex = Math.floor(colorCycle / segmentLength);
-      const segmentPosition = (colorCycle - segmentIndex * segmentLength) / segmentLength;
-      
-      const color1 = new THREE.Color(preset.colors[segmentIndex]);
-      const color2 = new THREE.Color(preset.colors[(segmentIndex + 1) % preset.colors.length]);
-      const finalColor = new THREE.Color().copy(color1).lerp(color2, segmentPosition);
+      const totalColors = gradientColors.length;
+      const segment = colorCycle * totalColors;
+      const index1 = Math.floor(segment) % totalColors;
+      const index2 = (index1 + 1) % totalColors;
+      const fraction = segment - Math.floor(segment);
+
+      const color1 = new THREE.Color(gradientColors[index1]);
+      const color2 = new THREE.Color(gradientColors[index2]);
+      const finalColor = new THREE.Color().copy(color1).lerp(color2, fraction);
       targetMaterial.color.copy(finalColor);
+    }
+
+    function updateDustColor() {
+      if (!dustUseGradient) {
+        dust.setColor(dustCustomColor);
+        return;
+      }
+      if (dustGradientColors.length === 1) {
+        dust.setColor(dustGradientColors[0]);
+        return;
+      }
+      dustColorCycle = (dustColorCycle + dustColorCycleSpeed) % 1;
+      const totalColors = dustGradientColors.length;
+      const segment = dustColorCycle * totalColors;
+      const index1 = Math.floor(segment) % totalColors;
+      const index2 = (index1 + 1) % totalColors;
+      const fraction = segment - Math.floor(segment);
+
+      const color1 = new THREE.Color(dustGradientColors[index1]);
+      const color2 = new THREE.Color(dustGradientColors[index2]);
+      const finalColor = new THREE.Color().copy(color1).lerp(color2, fraction);
+      dust.setColor(finalColor);
     }
     
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -532,15 +860,46 @@
         if (preset.colors.length === 1) {
           presetElement.style.background = preset.colors[0];
         } else {
-          presetElement.style.background = `linear-gradient(to right, ${preset.colors.join(', ')})`;
+          presetElement.style.background = `linear-gradient(to right, ${preset.colors.join(', ')}`;
         }
         
         presetElement.addEventListener('click', () => {
-          document.querySelectorAll('.color-preset').forEach(el => el.classList.remove('active'));
+          document.querySelectorAll('#colorPresets .color-preset').forEach(el => el.classList.remove('active'));
           presetElement.classList.add('active');
           activePreset = index;
+          gradientColors = preset.name === "Rainbow" ? [...preset.colors] : [...preset.colors];
           document.getElementById('useGradient').checked = true;
           useGradient = true;
+          updateGradientEditor();
+        });
+        
+        container.appendChild(presetElement);
+      });
+    }
+
+    function initDustColorPresets() {
+      const container = document.getElementById('dustColorPresets');
+      container.innerHTML = '';
+      
+      colorPresets.forEach((preset, index) => {
+        const presetElement = document.createElement('div');
+        presetElement.className = 'color-preset' + (index === dustActivePreset ? ' active' : '');
+        presetElement.title = preset.name;
+        
+        if (preset.colors.length === 1) {
+          presetElement.style.background = preset.colors[0];
+        } else {
+          presetElement.style.background = `linear-gradient(to right, ${preset.colors.join(', ')}`;
+        }
+        
+        presetElement.addEventListener('click', () => {
+          document.querySelectorAll('#dustColorPresets .color-preset').forEach(el => el.classList.remove('active'));
+          presetElement.classList.add('active');
+          dustActivePreset = index;
+          dustGradientColors = preset.name === "Rainbow" ? [...preset.colors] : [...preset.colors];
+          document.getElementById('dustUseGradient').checked = true;
+          dustUseGradient = true;
+          updateDustGradientEditor();
         });
         
         container.appendChild(presetElement);
@@ -548,6 +907,9 @@
     }
     
     initColorPresets();
+    initDustColorPresets();
+    updateGradientEditor();
+    updateDustGradientEditor();
     
     function animate() {
       requestAnimationFrame(animate);
@@ -558,7 +920,9 @@
         if (rotateZ) window.figure.rotation.z += rotationSpeed;
       }
       
+      dust.update();
       updateColor();
+      updateDustColor();
       renderer.render(scene, camera);
     }
     
@@ -663,6 +1027,8 @@
     
     document.getElementById('useGradient').addEventListener('change', function() {
       useGradient = this.checked;
+      document.getElementById('gradientEditor').style.display = useGradient ? 'block' : 'none';
+      if (useGradient) updateGradientEditor();
     });
     
     document.getElementById('lineWidth').addEventListener('input', function() {
@@ -719,6 +1085,193 @@
       document.getElementById('manualRotateSpeedValue').textContent = manualRotateSpeed.toFixed(1);
     });
     
+    document.getElementById('enableDust').addEventListener('change', function() {
+      const enabled = this.checked;
+      document.getElementById('dustOptions').style.display = enabled ? 'block' : 'none';
+      if (enabled) scene.add(dust.points);
+      else scene.remove(dust.points);
+    });
+
+    document.getElementById('dustGravity').addEventListener('change', function() {
+      dust.setGravity(this.checked);
+    });
+
+    document.getElementById('dustSpeed').addEventListener('input', function() {
+      const speed = parseFloat(this.value);
+      document.getElementById('dustSpeedValue').textContent = speed.toFixed(3);
+      dust.setFallingSpeed(speed);
+    });
+
+    function updateDustDirection() {
+      const x = parseFloat(document.getElementById('dustDirX').value) || 0;
+      const y = parseFloat(document.getElementById('dustDirY').value) || 0;
+      const z = parseFloat(document.getElementById('dustDirZ').value) || 0;
+      dust.setFallingDirection(x, y, z);
+    }
+
+    document.getElementById('dustDirX').addEventListener('input', updateDustDirection);
+    document.getElementById('dustDirY').addEventListener('input', updateDustDirection);
+    document.getElementById('dustDirZ').addEventListener('input', updateDustDirection);
+
+    document.getElementById('dustScale').addEventListener('input', function() {
+      const scale = parseFloat(this.value);
+      document.getElementById('dustScaleValue').textContent = scale.toFixed(2);
+      dust.setScale(scale);
+    });
+
+    document.getElementById('dustShape').addEventListener('change', function() {
+      dust.setShape(this.value);
+    });
+
+    document.getElementById('dustFlickerSpeed').addEventListener('input', function() {
+      const speed = parseFloat(this.value);
+      document.getElementById('dustFlickerSpeedValue').textContent = speed.toFixed(2);
+      dust.setFlickerSpeed(speed);
+    });
+
+    document.getElementById('dustParticleCount').addEventListener('input', function() {
+      const count = parseInt(this.value);
+      document.getElementById('dustParticleCountValue').textContent = count;
+      dust.setParticleCount(count);
+    });
+
+    document.getElementById('dustDepth').addEventListener('input', function() {
+      const depth = parseFloat(this.value);
+      document.getElementById('dustDepthValue').textContent = depth;
+      dust.setDepth(depth);
+    });
+
+    document.getElementById('dustSpread').addEventListener('input', function() {
+      const spread = parseFloat(this.value);
+      document.getElementById('dustSpreadValue').textContent = spread;
+      dust.setSpread(spread);
+    });
+
+    document.getElementById('dustUseGradient').addEventListener('change', function() {
+      dustUseGradient = this.checked;
+      document.getElementById('dustGradientEditor').style.display = dustUseGradient ? 'block' : 'none';
+      if (dustUseGradient) updateDustGradientEditor();
+    });
+
+    document.getElementById('dustColorCycleSpeed').addEventListener('input', function() {
+      dustColorCycleSpeed = parseFloat(this.value);
+      document.getElementById('dustColorCycleSpeedValue').textContent = dustColorCycleSpeed.toFixed(3);
+    });
+
+    document.getElementById('dustCustomColorPicker').addEventListener('input', function() {
+      const hexColor = this.value;
+      document.getElementById('dustHexValue').value = hexColor;
+      dustCustomColor = new THREE.Color(hexColor);
+      document.getElementById('dustUseGradient').checked = false;
+      dustUseGradient = false;
+    });
+
+    document.getElementById('dustHexValue').addEventListener('change', function() {
+      let hexColor = this.value;
+      if (!hexColor.startsWith('#')) hexColor = '#' + hexColor;
+      this.value = hexColor;
+      document.getElementById('dustCustomColorPicker').value = hexColor;
+      dustCustomColor = new THREE.Color(hexColor);
+      document.getElementById('dustUseGradient').checked = false;
+      dustUseGradient = false;
+    });
+
+    document.getElementById('applyDustCustomColor').addEventListener('click', function() {
+      const hexColor = document.getElementById('dustHexValue').value;
+      document.getElementById('dustCustomColorPicker').value = hexColor;
+      dustCustomColor = new THREE.Color(hexColor);
+      document.getElementById('dustUseGradient').checked = false;
+      dustUseGradient = false;
+    });
+
+    function updateGradientEditor() {
+      const container = document.getElementById('gradientColorsList');
+      container.innerHTML = '';
+      const isRainbow = colorPresets[activePreset].name === "Rainbow";
+      gradientColors.forEach((color, index) => {
+        const colorDiv = document.createElement('div');
+        colorDiv.className = 'gradient-color';
+        colorDiv.innerHTML = `
+          <input type="color" value="${color}" data-index="${index}" ${isRainbow ? 'disabled' : ''}>
+          <button class="remove-color" data-index="${index}" ${isRainbow || gradientColors.length <= 1 ? 'disabled' : ''}>Remove</button>
+        `;
+        container.appendChild(colorDiv);
+      });
+
+      if (!isRainbow) {
+        container.querySelectorAll('input[type="color"]').forEach(input => {
+          input.addEventListener('change', function() {
+            const index = parseInt(this.dataset.index);
+            gradientColors[index] = this.value;
+          });
+        });
+        container.querySelectorAll('.remove-color').forEach(button => {
+          button.addEventListener('click', function() {
+            const index = parseInt(this.dataset.index);
+            if (gradientColors.length > 1) {
+              gradientColors.splice(index, 1);
+              updateGradientEditor();
+            }
+          });
+        });
+      }
+    }
+
+    document.getElementById('addGradientColor').addEventListener('click', function() {
+      if (colorPresets[activePreset].name !== "Rainbow") {
+        gradientColors.push('#ffffff');
+        updateGradientEditor();
+      }
+    });
+
+    function updateDustGradientEditor() {
+      const container = document.getElementById('dustGradientColorsList');
+      container.innerHTML = '';
+      const isRainbow = colorPresets[dustActivePreset].name === "Rainbow";
+      dustGradientColors.forEach((color, index) => {
+        const colorDiv = document.createElement('div');
+        colorDiv.className = 'gradient-color';
+        colorDiv.innerHTML = `
+          <input type="color" value="${color}" data-index="${index}" ${isRainbow ? 'disabled' : ''}>
+          <button class="remove-color" data-index="${index}" ${isRainbow || dustGradientColors.length <= 1 ? 'disabled' : ''}>Remove</button>
+        `;
+        container.appendChild(colorDiv);
+      });
+
+      if (!isRainbow) {
+        container.querySelectorAll('input[type="color"]').forEach(input => {
+          input.addEventListener('change', function() {
+            const index = parseInt(this.dataset.index);
+            dustGradientColors[index] = this.value;
+          });
+        });
+        container.querySelectorAll('.remove-color').forEach(button => {
+          button.addEventListener('click', function() {
+            const index = parseInt(this.dataset.index);
+            if (dustGradientColors.length > 1) {
+              dustGradientColors.splice(index, 1);
+              updateDustGradientEditor();
+            }
+          });
+        });
+      }
+    }
+
+    document.getElementById('addDustGradientColor').addEventListener('click', function() {
+      if (colorPresets[dustActivePreset].name !== "Rainbow") {
+        dustGradientColors.push('#ffffff');
+        updateDustGradientEditor();
+      }
+    });
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'F10') {
+        event.preventDefault();
+        const controls = document.getElementById('controls');
+        controls.style.display = controls.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+
     document.getElementById('startCapture').addEventListener('click', function() {
       if (isCapturing) return;
       
@@ -859,7 +1412,7 @@
         
         const data = ffmpeg.FS('readFile', 'output.mp4');
         const blob = new Blob([data.buffer], { type: 'video/mp4' });
-        saveAs(blob, 'figure-animation.mp4');
+        saveAs(blob, "figure-animation.mp4");
         
         frameFiles.forEach(file => ffmpeg.FS('unlink', file.name));
         ffmpeg.FS('unlink', 'output.mp4');
