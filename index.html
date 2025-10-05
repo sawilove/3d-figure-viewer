@@ -724,7 +724,7 @@
       const bottomCenter = new THREE.Vector3(0, -height, 0);
 
       vertices.push(topCenter.x, topCenter.y, topCenter.z);
-      vertices.push(bottomColor.x, bottomCenter.y, bottomCenter.z);
+      vertices.push(bottomCenter.x, bottomCenter.y, bottomCenter.z);
       topPoints.forEach(p => vertices.push(p.x, p.y, p.z));
       bottomPoints.forEach(p => vertices.push(p.x, p.y, p.z));
 
@@ -1427,3 +1427,4 @@
   </script>
 </body>
 </html>
+
